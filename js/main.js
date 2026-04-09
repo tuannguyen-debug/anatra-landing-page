@@ -275,8 +275,8 @@ function submitOrder(e) {
   // Hiển thị nội dung chuyển khoản
   document.getElementById('transferNoteValue').textContent = transferNote;
 
-  // Tạo QR SePay: VietinBank, STK 107869911457
-  const qrUrl = `https://qr.sepay.vn/img?acc=107869911457&bank=VietinBank&amount=${total}&des=${encodeURIComponent(transferNote)}&template=compact`;
+  // Tạo QR SePay: MBBank, STK 0987886711
+  const qrUrl = `https://qr.sepay.vn/img?acc=0987886711&bank=MBBank&amount=${total}&des=${encodeURIComponent(transferNote)}&template=compact`;
   document.getElementById('qrImage').src = qrUrl;
 
   // Chuyển sang bước QR
