@@ -1300,6 +1300,58 @@ h4 { font-size: clamp(1.1rem, 2vw, 1.4rem); }
   cursor: pointer;
 }
 
+/* ===== SUCCESS SCREEN ===== */
+.success-screen { text-align: center; padding: 20px 0; }
+.success-anim { margin-bottom: 20px; }
+.success-circle {
+  width: 90px; height: 90px; border-radius: 50%;
+  background: linear-gradient(135deg, #0a7c42, #10b981);
+  display: inline-flex; align-items: center; justify-content: center;
+  animation: successPop 0.5s ease-out;
+  box-shadow: 0 0 30px rgba(16,185,129,0.4);
+}
+.success-circle span { color: #fff; font-size: 48px; font-weight: bold; }
+@keyframes successPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.success-title {
+  font-family: var(--font-display); color: #0a7c42;
+  font-size: 1.6rem; margin: 16px 0 8px;
+}
+.success-sub {
+  font-family: var(--font-accent); color: var(--text-muted);
+  font-style: italic; margin-bottom: 20px;
+}
+.success-details {
+  background: var(--cream-50); border: 1px solid var(--gold-300);
+  border-radius: var(--radius-sm); padding: 16px; margin: 16px 0;
+  text-align: left;
+}
+.success-details .sd-row {
+  display: flex; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.success-details .sd-row:last-child { border: none; }
+.success-details .sd-label { color: var(--text-muted); font-size: 0.85rem; }
+.success-details .sd-value { font-weight: 600; color: var(--text-dark); }
+.success-note {
+  font-size: 0.85rem; color: var(--text-muted); line-height: 1.8;
+  margin: 16px 0;
+}
+.polling-status {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 12px; margin-top: 16px;
+  background: #FFF8E1; border: 1px solid var(--gold-400);
+  border-radius: var(--radius-sm); font-size: 0.85rem; color: #8B6914;
+}
+.polling-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #D4AF37; animation: blink 1s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .header-badges { display: none; }

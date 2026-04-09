@@ -284,46 +284,95 @@ function submitOrder(e) {
   document.getElementById('step-qr').style.display = 'block';
   document.querySelector('.modal').scrollTop = 0;
 
-  // === GỬI DỮ LIỆU LÊN GOOGLE SHEET (chạy nền, không block UI) ===
-  if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
-    const payload = {
-      fullname: fullname,
-      phone: phone,
-      email: email,
-      address: address,
-      products: productNames.join(', '),
-      total: total,
-      transferNote: transferNote,
-      note: note
-    };
+  // Lưu thông tin đơn để hiển thị ở success screen
+  window._orderInfo = { products: productNames.join(', '), total, transferNote };
 
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    .then(() => {
-      console.log('✅ Đã gửi đơn hàng lên Google Sheet');
-    })
-    .catch(err => {
-      console.error('❌ Lỗi gửi Google Sheet:', err);
-    });
-  } else {
-    console.warn('⚠️ Chưa cấu hình GOOGLE_SCRIPT_URL. Dữ liệu chưa được gửi.');
+  // Gửi dữ liệu lên Google Sheet
+  const payload = { fullname, phone, email, address, products: productNames.join(', '), total, transferNote, note };
+  fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    console.log('✅ Đã gửi đơn hàng lên Google Sheet');
+    // Bắt đầu polling sau khi gửi đơn xong
+    startPolling(transferNote);
+  }).catch(err => {
+    console.error('❌ Lỗi gửi:', err);
+    startPolling(transferNote);
+  });
+}
+
+// === POLLING: Kiểm tra trạng thái thanh toán mỗi 5 giây ===
+let _pollingTimer = null;
+
+function startPolling(transferNote) {
+  stopPolling();
+  console.log('🔄 Bắt đầu kiểm tra thanh toán:', transferNote);
+
+  // Thêm thanh trạng thái đang chờ
+  const qrInfo = document.querySelector('#step-qr .qr-info');
+  if (qrInfo && !document.getElementById('pollingStatus')) {
+    const div = document.createElement('div');
+    div.id = 'pollingStatus';
+    div.className = 'polling-status';
+    div.innerHTML = '<div class="polling-dot"></div> Đang chờ xác nhận thanh toán...';
+    qrInfo.insertBefore(div, qrInfo.querySelector('.qr-note'));
+  }
+
+  _pollingTimer = setInterval(() => {
+    fetch(GOOGLE_SCRIPT_URL + '?action=check&transferNote=' + encodeURIComponent(transferNote))
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'paid') {
+          stopPolling();
+          showSuccessScreen();
+        }
+      })
+      .catch(() => {}); // im lặng nếu lỗi mạng
+  }, 5000);
+}
+
+function stopPolling() {
+  if (_pollingTimer) { clearInterval(_pollingTimer); _pollingTimer = null; }
+}
+
+function showSuccessScreen() {
+  // Ẩn QR, hiện Success
+  document.getElementById('step-qr').style.display = 'none';
+  document.getElementById('step-success').style.display = 'block';
+  document.querySelector('.modal').scrollTop = 0;
+
+  // Hiển thị chi tiết đơn hàng
+  const info = window._orderInfo || {};
+  const el = document.getElementById('successDetails');
+  if (el) {
+    el.innerHTML = '<div class="sd-row"><span class="sd-label">Sản phẩm</span><span class="sd-value">' + (info.products || '') + '</span></div>'
+      + '<div class="sd-row"><span class="sd-label">Tổng tiền</span><span class="sd-value" style="color:#0a7c42">' + formatMoney(info.total || 0) + '</span></div>'
+      + '<div class="sd-row"><span class="sd-label">Mã đơn</span><span class="sd-value">' + (info.transferNote || '') + '</span></div>';
   }
 }
 
 // Quay lại bước form từ bước QR
 function backToForm() {
+  stopPolling();
+  const ps = document.getElementById('pollingStatus');
+  if (ps) ps.remove();
   document.getElementById('step-form').style.display = 'block';
   document.getElementById('step-qr').style.display = 'none';
   document.querySelector('.modal').scrollTop = 0;
 }
 
-// Đóng modal khi click vào overlay (ngoài modal)
+// Đóng modal
+function closeModal() {
+  stopPolling();
+  closeOrderModal();
+}
+
+// Đóng modal khi click overlay
 document.addEventListener('click', function(e) {
   if (e.target.classList.contains('modal-overlay')) {
+    stopPolling();
     closeOrderModal();
   }
 });
