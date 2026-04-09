@@ -1,0 +1,5 @@
+# Tệp không cần đẩy lên repo
+apps-script.js
+.DS_Store
+Thumbs.db
+node_modules/
